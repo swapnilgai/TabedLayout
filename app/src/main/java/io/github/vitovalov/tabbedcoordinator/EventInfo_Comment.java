@@ -34,7 +34,10 @@ import org.greenrobot.eventbus.Subscribe;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -63,7 +66,7 @@ public class EventInfo_Comment extends Fragment {
     private UploadImage uploadImage;
     private PostUsersComment postUsersComment;
     private String urlForComment;
-
+    private String eventId = "16";
     public EventInfo_Comment() {
         // Required empty public constructor
     }
@@ -89,7 +92,6 @@ public class EventInfo_Comment extends Fragment {
         recyclerView.setHasFixedSize(true);
 
         LinearLayoutManager l = new LinearLayoutManager(view.getContext());
-        Log.e("layout manager : ",""+l);
         recyclerView.setLayoutManager(l);
 
         if(!EventBusService.getInstance().isRegistered(this))
@@ -118,30 +120,33 @@ public class EventInfo_Comment extends Fragment {
 
             @Override
             public void onClick(View v) {
+
                 Comments commentTemp = new Comments();
 
                 urlForComment = "https://eventfy.herokuapp.com/webapi/comments/addcomment";
 
-                commentTemp.setUserName("Current user");
+
+                commentTemp.setUserName("Current User");
 
                 String commentText = commentTextEditText.getText().toString();
 
                 if(bm!=null) {
                     commentTemp.setCommentText(dest.toString());
                     commentTemp.setIsImage(true);
+                    commentTemp.setEventId(Integer.parseInt(eventId));
+
                     uploadImage = new UploadImage(commentTemp, bm, urlForComment);
                     uploadImage.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
                 }
                 else{
                     commentTemp.setCommentText(commentText);
+                    commentTemp.setEventId(Integer.parseInt(eventId));
                     commentTemp.setIsImage(false);
                     postUsersComment = new PostUsersComment(urlForComment, commentTemp);
+                    postUsersComment.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
                 }
 
-
-                commentsList.add(commentTemp);
-
-                bindAdapter(commentsList);
+               // bindAdapter(commentsList);
             }
         });
 
@@ -185,7 +190,7 @@ public class EventInfo_Comment extends Fragment {
 
                 adapter.notifyItemInserted(commentsList.size() - 1);
 
-                getNearbEventServerCall();
+//                getNearbEventServerCall();
             }
         });
 
@@ -259,7 +264,7 @@ public class EventInfo_Comment extends Fragment {
 
          String url = "https://eventfy.herokuapp.com/webapi/comments/geteventcomment";
 
-         GetCommentsForEvent getCommentsForEvent = new GetCommentsForEvent(url, "2");
+         GetCommentsForEvent getCommentsForEvent = new GetCommentsForEvent(url, eventId);
          getCommentsForEvent.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 
     }
@@ -267,54 +272,116 @@ public class EventInfo_Comment extends Fragment {
     @Subscribe
     public void getCommentForEvent(List<Comments> commentsList)
     {
-        this.commentsListTemp.addAll(commentsList);
+        Log.e("item received comment : ", "" + this.commentsList.size());
 
-        displayComments();
+        if(commentsList.get(0) instanceof Comments) {
+            this.commentsListTemp.addAll(commentsList);
+
+            displayComments();
+        }
     }
 
     @Subscribe
     public void getPostedComment(Comments comments)
     {
-        commentsList.add(comments);
-        adapter.notifyItemInserted(commentsList.size()-1);
+        Log.e("posted comment: ", ""+comments.getCommentId());
+
+
+        if(comments!=null) {
+            commentsList.removeAll(commentsList);
+
+            // commentsList.add(comments);
+            commentsList.add(null);
+            adapter.notifyItemInserted(commentsList.size() - 1);
+            adapter.notifyDataSetChanged();
+
+            CommentPostImageLayout.setVisibility(View.INVISIBLE);
+            bm = null;
+            commentTextEditText.setText("");
+
+            getNearbEventServerCall();
+            Toast.makeText(getContext(), "You'r comment has been posted", Toast.LENGTH_LONG).show();
+        }
+
+        else{
+            Toast.makeText(getContext(), "Unable to post you'r comment", Toast.LENGTH_LONG).show();
+        }
+
     }
 
     public void setCommentSectionVisible()
     {
         CommentPostImageLayout.setVisibility(View.VISIBLE);
         slectedImageViewFromDevice.setImageBitmap(bm);
-
     }
-
-
 
     public void displayComments()
     {
+
         //add null , so the adapter will check view_type and show progress bar at bottom
 
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
 
-                Log.e("Size : ", ""+commentsList.size());
                 commentsList.remove(commentsList.size() - 1);
                 adapter.notifyItemRemoved(commentsList.size());
-
+                Date date1 = null;
+                Date date2 = null;
                //  commentsList.addAll(commentsListTemp);
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 
-                for(Comments comments: commentsListTemp)
+
+                for(int i=0; i <commentsListTemp.size()-1;i++)
                 {
-                    commentsList.add(comments);
-                    adapter.notifyItemInserted(commentsList.size()-1);
-                }
-               // adapter.clear();
-            //    adapter.addAll(commentsList);
-            //    adapter.notifyDataSetChanged();
 
+                    date1 = commentsListTemp.get(i).getDate();
+                    date2 = commentsListTemp.get(i+1).getDate();
+
+                    SimpleDateFormat df = new SimpleDateFormat("yyyy");
+                    int yearDate1 = Integer.parseInt(df.format(date1));
+                    int yearDate2 = Integer.parseInt(df.format(date2));
+
+                    commentsList.add(commentsListTemp.get(i));
+
+                    if(yearDate2>yearDate1 || date2.getMonth()>date1.getMonth() || date2.getDay()>date2.getDay() )
+                        {
+                            Comments commentsTemp = new Comments();
+                            commentsTemp.setIsDateText(true);
+                           commentsList.add(commentsTemp);
+                        }
+                }
+
+                commentsList.add(commentsListTemp.get(commentsListTemp.size()-1));
+
+                adapter.clear();
+                adapter.addAll(commentsList);
+                adapter.notifyDataSetChanged();
                 adapter.setLoaded();
+
             }
-        }, 20000);
+        }, 5000);
+
+
+
     }
+
+
+    public void processComment() throws ParseException {
+
+
+//        if (commentsList!= null && commentsList.size() > 1) {
+//            Collections.sort(commentsList, new Comparator<Comments>() {
+//                @Override
+//                public int compare(final Comments object1, final Comments object2) {
+//                    date1 = object1.getDate();
+//
+//                    return .compareTo(object2.getDate());
+//                }
+//            } );
+    }
+
+
 
     // Crop Image
 
@@ -370,5 +437,4 @@ public class EventInfo_Comment extends Fragment {
         return actuallyUsableBitmap;
     }
     // Crop image end
-
 }

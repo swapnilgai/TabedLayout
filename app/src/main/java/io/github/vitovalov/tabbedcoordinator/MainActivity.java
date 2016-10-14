@@ -11,6 +11,7 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 
 import java.util.*;
 
@@ -65,10 +66,27 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupViewPager(ViewPager viewPager) {
+
+        Events event = new Events();
+        event.setEventDateFrom("10-oct-2016");
+        event.setEventDateTo("12-oct-2016");
+        event.setEventLocationLatitude(33.875501);
+        event.setEventLocationLongitude(-117.883372);
+        event.setEventDescription("dgsvfsfasdfyabh dvsadhbsvdasbdvasvd ybasydyasy dyasdy ayd uasvdyuasygtdufe " +
+                "ejwnfjweb jfbewhkfb ewjbfhewbhf bewhbfhewb jfb jgyevtuf ewygf yevwtufveywv yewvyfv yew");
+        event.setEventName("Event Name");
+
+
+        About about_fragment = new About();
+        Bundle bundle = new Bundle();
+        bundle.putSerializable("EVENT_ABOUT", event);
+        about_fragment.setArguments(bundle);
+        Log.e("in main : ", ""+event.getEventName());
+
         ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
         adapter.addFrag(new EventInfo_Comment(), "Comments");
-        adapter.addFrag(new TabFragment(), "Attendees");
-        adapter.addFrag(new TabFragment(), "Info");
+        adapter.addFrag(new Attendance(), "Attendees");
+        adapter.addFrag(about_fragment, "About");
         viewPager.setOffscreenPageLimit(2);
         viewPager.setAdapter(adapter);
     }

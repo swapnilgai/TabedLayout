@@ -3,7 +3,9 @@ package io.github.vitovalov.tabbedcoordinator;
 /**
  * Created by swapnil on 5/29/16.
  */
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.util.Date;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Comments {
@@ -26,7 +28,28 @@ public class Comments {
     private String voteDown;
     @JsonIgnoreProperties(ignoreUnknown = true)
     private int eventId;
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    private Date date;
 
+    public boolean getIsDateText() {
+        return isDateText;
+    }
+
+    public void setIsDateText(boolean isDateText) {
+        this.isDateText = isDateText;
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    private boolean isDateText;
+
+    public Date getDate() {
+        return date;
+    }
+
+    public void setDate(Date date) {
+        this.date = date;
+    }
+    
     public int getEventId() {
         return eventId;
     }

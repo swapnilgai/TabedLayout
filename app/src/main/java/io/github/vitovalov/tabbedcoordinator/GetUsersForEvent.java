@@ -14,19 +14,18 @@ import org.springframework.web.client.RestTemplate;
 import java.util.Arrays;
 import java.util.List;
 
-
 /**
- * Created by swapnil on 8/9/16.
+ * Created by swapnil on 10/8/16.
  */
-public class GetCommentsForEvent extends AsyncTask<Void, Void, Void> {
+public class GetUsersForEvent  extends AsyncTask<Void, Void, Void> {
 
     private String url;
-    private List<Comments> commentList;
+    private List<SignUp> userList;
     private String eventId;
-   // private String flag;
+    // private String flag;
 
 
-    public GetCommentsForEvent(String url, String eventId) {
+    public GetUsersForEvent(String url, String eventId) {
         this.url = url;
         this.eventId = eventId;
     }
@@ -44,18 +43,18 @@ public class GetCommentsForEvent extends AsyncTask<Void, Void, Void> {
 
         HttpEntity<String> request = new HttpEntity<>(eventId, headers);
 
-        ResponseEntity<Comments []> response = restTemplate.exchange(url, HttpMethod.POST, request, Comments[].class);
+        ResponseEntity<SignUp []> response = restTemplate.exchange(url, HttpMethod.POST, request, SignUp[].class);
 
-        Comments [] comments = response.getBody();
+        SignUp [] userListArray = response.getBody();
 
-        commentList = Arrays.asList(comments);
-    return null;
+        userList = Arrays.asList(userListArray);
+        return null;
     }
 
     @Override
     protected void onPostExecute(Void aVoid) {
         super.onPostExecute(aVoid);
-        Log.e("data received: ", ""+commentList.size());
-        EventBusService.getInstance().post(commentList);
+        Log.e(" user data received: ", ""+userList.size());
+        EventBusService.getInstance().post(userList);
     }
 }

@@ -5,11 +5,13 @@ import android.animation.ValueAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.RecyclerView.ViewHolder;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.LinearInterpolator;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
@@ -23,7 +25,8 @@ public class CommentAdapter  extends ArrayRecyclerAdapter<Comments, RecyclerView
     public View view;
     private final int VIEW_ITEM = 5;
     private final int VIEW_PROG = 0;
-    private int visibleThreshold = 30;
+    private final int VIEW_DATE = 1;
+    private int visibleThreshold = 50;
     private int lastVisibleItem, totalItemCount;
     private boolean loading;
     private OnLoadMoreListener onLoadMoreListener;
@@ -48,8 +51,8 @@ public class CommentAdapter  extends ArrayRecyclerAdapter<Comments, RecyclerView
                             totalItemCount = getItemCount();
                             lastVisibleItem = recyclerView.getChildCount();
 
-//                            Log.e("totalItemCount:  ",""+totalItemCount);
-  //                          Log.e("combin : ",""+(lastVisibleItem + visibleThreshold));
+                           Log.e("totalItemCount:  ",""+totalItemCount);
+                            Log.e("combin : ",""+(lastVisibleItem + visibleThreshold));
 
                             if (!loading && totalItemCount <= (lastVisibleItem + visibleThreshold)) {
                                 // End has been reached
@@ -73,10 +76,15 @@ public class CommentAdapter  extends ArrayRecyclerAdapter<Comments, RecyclerView
             v = new ResultHolder(LayoutInflater.from(parent.getContext()).
                             inflate(R.layout.eventinfo_comment_text, parent, false));
 
-        } else {
+        } else if(viewType == VIEW_PROG){
 
             v = new ProgressBarHolder(LayoutInflater.from(parent.getContext()).
                             inflate(R.layout.loading_list_items, parent, false));
+        }
+        else
+        {
+            v = new DateHolder(LayoutInflater.from(parent.getContext()).
+                    inflate(R.layout.comment_date_tag, parent, false));
         }
 
         return v;
@@ -108,8 +116,10 @@ public class CommentAdapter  extends ArrayRecyclerAdapter<Comments, RecyclerView
             }
 
             ((ResultHolder) holder).autherName.setText(comment.getUserName());
+
+
         }
-        else
+        else if(holder instanceof ProgressBarHolder)
         {
             ProgressBarHolder loadingViewHolder = (ProgressBarHolder) holder;
             ObjectAnimator animator = ObjectAnimator.ofFloat(loadingViewHolder.progressBar, "rotation", 0, 360);
@@ -120,13 +130,21 @@ public class CommentAdapter  extends ArrayRecyclerAdapter<Comments, RecyclerView
             return;
 
         }
+        else if(holder instanceof DateHolder) {
+            Log.e("in holder view : ", ""+holder);
+
+            ((DateHolder) holder).commentDateText.setText("-------"+commentList.get(position+1).getDate()+"-------");
+        }
     }
 
 
     @Override
     public int getItemViewType(int position) {
 
-        if(commentList.get(position)!=null)
+        if(commentList.get(position)!=null && commentList.get(position).getIsDateText()) {
+            return VIEW_DATE;
+        }
+            else if(commentList.get(position)!=null)
              return  VIEW_ITEM;
 
         return VIEW_PROG;
@@ -158,6 +176,7 @@ public class CommentAdapter  extends ArrayRecyclerAdapter<Comments, RecyclerView
         ImageView autherImage;
         TextView autherCommentText;
         ImageView commentImage;
+        LinearLayout linearLayout;
 
         public ResultHolder(View itemView) {
             super(itemView);
@@ -165,6 +184,7 @@ public class CommentAdapter  extends ArrayRecyclerAdapter<Comments, RecyclerView
             autherImage = (ImageView) itemView.findViewById(R.id.autherImage);
             autherCommentText = (TextView) itemView.findViewById(R.id.autherCommentText);
             commentImage = (ImageView) itemView.findViewById(R.id.commentImage);
+          //  linearLayout = (ImageView) itemView.findViewById(R.id.commentImage);
         }
     }
 
@@ -179,4 +199,15 @@ public class CommentAdapter  extends ArrayRecyclerAdapter<Comments, RecyclerView
         }
     }
 
+
+    public class DateHolder extends RecyclerView.ViewHolder {
+
+        TextView commentDateText;
+        public DateHolder(View itemView) {
+            super(itemView);
+
+            commentDateText = (TextView) itemView.findViewById(R.id.commentDateText);
+
+        }
+    }
 }
